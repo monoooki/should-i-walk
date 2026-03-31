@@ -1,20 +1,173 @@
 <!doctype html>
 <html lang="ja">
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>三鷹 散歩指数</title>
-  <body>
-    <h1>散歩指数</h1>
-    <pre id="out">loading...</pre>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>散歩指数 — 三鷹</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+  </head>
+  <body class="min-h-screen bg-gradient-to-br from-sky-100 to-blue-200 flex items-center justify-center p-4">
+
+    <!-- Loading state -->
+    <div id="loading" class="text-center text-sky-700 text-lg font-medium animate-pulse">
+      読み込み中…
+    </div>
+
+    <!-- Error state -->
+    <div id="error" class="hidden bg-red-50 border border-red-200 text-red-700 rounded-2xl p-6 max-w-sm w-full text-center shadow">
+      <p class="text-4xl mb-3">⚠️</p>
+      <p class="font-semibold text-lg mb-1">データを読み込めませんでした</p>
+      <p id="error-msg" class="text-sm"></p>
+    </div>
+
+    <!-- Main card -->
+    <div id="card" class="hidden w-full max-w-sm">
+      <div id="main-card" class="rounded-3xl shadow-xl p-6 text-white">
+
+        <!-- Header -->
+        <div class="flex items-center justify-between mb-1">
+          <div>
+            <p id="location" class="text-xs font-semibold uppercase tracking-widest opacity-80"></p>
+            <h1 class="text-2xl font-bold leading-tight">散歩指数</h1>
+          </div>
+          <div class="text-right text-xs opacity-75">
+            <p id="local-date"></p>
+            <p id="local-time" class="text-lg font-semibold"></p>
+          </div>
+        </div>
+
+        <!-- Score circle -->
+        <div class="flex flex-col items-center my-6">
+          <div id="score-circle" class="w-32 h-32 rounded-full flex flex-col items-center justify-center shadow-inner border-4 border-white/40">
+            <span id="score-num" class="text-5xl font-extrabold leading-none"></span>
+            <span class="text-xs font-medium opacity-80 mt-0.5">/ 100</span>
+          </div>
+          <p id="score-label" class="mt-3 text-xl font-bold tracking-wide"></p>
+        </div>
+
+        <!-- Reasons -->
+        <div id="reasons-wrap" class="mb-5 hidden">
+          <p class="text-xs font-semibold uppercase tracking-widest opacity-70 mb-2">理由</p>
+          <ul id="reasons-list" class="space-y-1"></ul>
+        </div>
+
+        <!-- Weather grid -->
+        <div class="grid grid-cols-2 gap-3 text-white/90">
+          <div class="bg-white/20 rounded-2xl p-3">
+            <p class="text-xs opacity-70 mb-0.5">気温 / 体感</p>
+            <p id="temp" class="text-lg font-bold"></p>
+          </div>
+          <div class="bg-white/20 rounded-2xl p-3">
+            <p class="text-xs opacity-70 mb-0.5">天気</p>
+            <p id="condition" class="text-base font-semibold leading-snug"></p>
+          </div>
+          <div class="bg-white/20 rounded-2xl p-3">
+            <p class="text-xs opacity-70 mb-0.5">風速</p>
+            <p id="wind" class="text-lg font-bold"></p>
+          </div>
+          <div class="bg-white/20 rounded-2xl p-3">
+            <p class="text-xs opacity-70 mb-0.5">湿度 / 降水</p>
+            <p id="humid" class="text-lg font-bold"></p>
+          </div>
+        </div>
+
+        <!-- Sunrise/Sunset -->
+        <div class="flex justify-around mt-4 pt-4 border-t border-white/30 text-white/80 text-sm">
+          <div class="text-center">
+            <span class="text-base">🌅</span>
+            <p id="sunrise" class="font-semibold mt-0.5"></p>
+            <p class="text-xs opacity-60">日の出</p>
+          </div>
+          <div class="text-center">
+            <span class="text-base">🌇</span>
+            <p id="sunset" class="font-semibold mt-0.5"></p>
+            <p class="text-xs opacity-60">日の入り</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Footer -->
+      <p class="text-center text-xs text-sky-600/70 mt-3">
+        更新: <span id="fetched-at"></span>
+      </p>
+    </div>
+
     <script>
       (async () => {
         try {
           const r = await fetch("./data/walkability.json", { cache: "no-store" });
           if (!r.ok) throw new Error(`HTTP ${r.status}`);
           const j = await r.json();
-          document.getElementById("out").textContent = JSON.stringify(j, null, 2);
+
+          // Determine color theme based on walkability
+          const themes = {
+            good:    { bg: "from-emerald-400 to-teal-500",    circleBg: "bg-emerald-300/40", label: "🚶 散歩日和！" },
+            neutral: { bg: "from-amber-400 to-orange-400",    circleBg: "bg-amber-300/40",   label: "🤔 まあまあ" },
+            bad:     { bg: "from-slate-500 to-slate-700",     circleBg: "bg-slate-400/40",   label: "🌧 やめとこう" },
+          };
+          const theme = themes[j.walkability] || themes.neutral;
+
+          const mainCard = document.getElementById("main-card");
+          mainCard.className = mainCard.className + ` bg-gradient-to-br ${theme.bg}`;
+
+          const circle = document.getElementById("score-circle");
+          circle.className = circle.className + ` ${theme.circleBg}`;
+
+          document.getElementById("location").textContent = j.location ?? j.query;
+          document.getElementById("local-date").textContent = j.localDate ?? "";
+          document.getElementById("local-time").textContent = j.localTime ?? "";
+          document.getElementById("score-num").textContent = j.walkabilityPercent ?? 0;
+          document.getElementById("score-label").textContent = theme.label;
+
+          // Reasons
+          const reasons = j.reasons ?? [];
+          if (reasons.length > 0) {
+            const ul = document.getElementById("reasons-list");
+            reasons.forEach(reason => {
+              const li = document.createElement("li");
+              li.className = "flex items-start gap-1.5 text-sm bg-white/20 rounded-xl px-3 py-1.5";
+              const bullet = document.createElement("span");
+              bullet.className = "mt-0.5";
+              bullet.textContent = "•";
+              const text = document.createElement("span");
+              text.textContent = reason;
+              li.appendChild(bullet);
+              li.appendChild(text);
+              ul.appendChild(li);
+            });
+            document.getElementById("reasons-wrap").classList.remove("hidden");
+          }
+
+          // Weather
+          const raw = j.raw ?? {};
+          document.getElementById("temp").textContent =
+            raw.tempC != null ? `${raw.tempC}°C / ${raw.feelslikeC}°C` : "—";
+          document.getElementById("condition").textContent = raw.condition ?? "—";
+          document.getElementById("wind").textContent =
+            raw.windKph != null ? `${raw.windKph} km/h` : "—";
+          document.getElementById("humid").textContent =
+            (raw.humidity != null ? `${raw.humidity}%` : "—") +
+            " / " +
+            (raw.precipMm != null ? `${raw.precipMm}mm` : "—");
+
+          // Astro
+          document.getElementById("sunrise").textContent = j.astro?.sunrise ?? "—";
+          document.getElementById("sunset").textContent = j.astro?.sunset ?? "—";
+
+          // Fetched at
+          if (j.fetchedAt) {
+            const d = new Date(j.fetchedAt);
+            document.getElementById("fetched-at").textContent =
+              d.toLocaleString("ja-JP", { timeZone: "Asia/Tokyo" });
+          }
+
+          document.getElementById("loading").classList.add("hidden");
+          document.getElementById("card").classList.remove("hidden");
+
         } catch (e) {
-          document.getElementById("out").textContent = "データを読み込めませんでした: " + e.message;
+          document.getElementById("loading").classList.add("hidden");
+          document.getElementById("error-msg").textContent = e.message;
+          document.getElementById("error").classList.remove("hidden");
         }
       })();
     </script>
