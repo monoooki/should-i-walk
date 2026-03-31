@@ -16,7 +16,8 @@ const url =
   `&q=${encodeURIComponent(q)}` +
   `&days=1` +
   `&aqi=no` +
-  `&alerts=no`;
+  `&alerts=no` +
+  `&lang=ja`;
 
 const res = await fetch(url);
 if (!res.ok) {
