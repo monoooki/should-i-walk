@@ -1,0 +1,22 @@
+<!doctype html>
+<html lang="ja">
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>三鷹 散歩指数</title>
+  <body>
+    <h1>散歩指数</h1>
+    <pre id="out">loading...</pre>
+    <script>
+      (async () => {
+        try {
+          const r = await fetch("./data/walkability.json", { cache: "no-store" });
+          if (!r.ok) throw new Error(`HTTP ${r.status}`);
+          const j = await r.json();
+          document.getElementById("out").textContent = JSON.stringify(j, null, 2);
+        } catch (e) {
+          document.getElementById("out").textContent = "データを読み込めませんでした: " + e.message;
+        }
+      })();
+    </script>
+  </body>
+</html>
