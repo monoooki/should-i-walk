@@ -144,7 +144,7 @@
             raw.tempC != null ? `${raw.tempC}°C / ${raw.feelslikeC}°C` : "—";
           document.getElementById("condition").textContent = raw.condition ?? "—";
           document.getElementById("wind").textContent =
-            raw.windKph != null ? `${raw.windKph} km/h` : "—";
+            raw.windMs != null ? `${raw.windMs} m/s` : "—";
           document.getElementById("humid").textContent =
             (raw.humidity != null ? `${raw.humidity}%` : "—") +
             " / " +
