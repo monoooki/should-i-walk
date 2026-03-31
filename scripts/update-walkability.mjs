@@ -33,7 +33,7 @@ if (!data.forecast?.forecastday?.length) {
 const astro = data.forecast.forecastday[0].astro;
 
 const feels = Number(current.feelslike_c);
-const wind = Number(current.wind_kph);
+const wind = Math.round((Number(current.wind_kph) / 3.6) * 10) / 10;
 const precip = Number(current.precip_mm);
 const humidity = Number(current.humidity);
 const cond = String(current.condition?.text ?? "");
@@ -109,10 +109,10 @@ if (score > 0) {
   tempPenalty = clamp(tempPenalty, 0, 50);
   if (tempPenalty > 0) reasons.push(`体感温度による減点（-${tempPenalty.toFixed(0)}）`);
 
-  // 風: 15kphまでは快適、30kphで厳しい（最大25点減点）
+  // 風: 4m/sまでは快適、8m/sで厳しい（最大25点減点）
   let windPenalty = 0;
-  if (wind >= 30) windPenalty = 25;
-  else if (wind > 15) windPenalty = ((wind - 15) / (30 - 15)) * 25;
+  if (wind >= 8) windPenalty = 25;
+  else if (wind > 4) windPenalty = ((wind - 4) / (8 - 4)) * 25;
   windPenalty = clamp(windPenalty, 0, 25);
   if (windPenalty > 0) reasons.push(`風による減点（-${windPenalty.toFixed(0)}）`);
 
@@ -147,7 +147,7 @@ const out = {
     tempC: current.temp_c,
     feelslikeC: current.feelslike_c,
     condition: cond,
-    windKph: wind,
+    windMs: wind,
     precipMm: precip,
     humidity,
   },
