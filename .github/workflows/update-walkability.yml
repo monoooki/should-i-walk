@@ -29,12 +29,12 @@ jobs:
 
       - name: Commit & push if changed
         run: |
-          if git diff --quiet; then
+          git add data/walkability.json
+          if git diff --cached --quiet; then
             echo "No changes"
             exit 0
           fi
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add data/walkability.json
           git commit -m "Update walkability data"
           git push
