@@ -1,24 +1,24 @@
 {
   "query": "mitaka-shi",
   "location": "Mitaka-Shi, Tokyo, Japan",
-  "localDate": "2026-04-10",
-  "localTime": "23:53",
+  "localDate": "2026-04-11",
+  "localTime": "00:23",
   "astro": {
-    "sunrise": "05:17 AM",
-    "sunset": "06:10 PM"
+    "sunrise": "05:15 AM",
+    "sunset": "06:11 PM"
   },
-  "fetchedAt": "2026-04-10T14:54:14.989Z",
+  "fetchedAt": "2026-04-10T15:23:41.663Z",
   "walkabilityPercent": 0,
   "walkability": "bad",
   "reasons": [
     "雨なし",
-    "夜間（05:17 AM〜06:10 PMの範囲外）"
+    "夜間（05:15 AM〜06:11 PMの範囲外）"
   ],
   "raw": {
-    "tempC": 15.2,
-    "feelslikeC": 15.2,
+    "tempC": 14.1,
+    "feelslikeC": 14.8,
     "condition": "もや",
-    "windMs": 2.4,
+    "windMs": 1,
     "precipMm": 0,
     "humidity": 94
   }
