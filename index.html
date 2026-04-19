@@ -39,8 +39,8 @@
               <h1 class="text-2xl font-bold leading-tight">散歩指数</h1>
             </div>
             <div class="text-right text-xs opacity-75">
-              <p id="local-date"></p>
-              <p id="local-time" class="text-lg font-semibold"></p>
+              <p class="text-[10px] opacity-70">天気データ</p>
+              <p id="observed-relative" class="text-sm font-semibold"></p>
             </div>
           </div>
 
@@ -94,9 +94,6 @@
           </div>
         </div>
 
-        <p class="text-center text-xs text-sky-600/70 mt-3">
-          更新: <span id="fetched-at"></span>
-        </p>
       </div>
 
       <section class="text-center">
@@ -137,6 +134,9 @@
         </div>
 
         <p id="status-msg" class="mt-2 text-xs text-slate-600"></p>
+        <p class="mt-2 text-[11px] text-slate-500">
+          出典：「位置参照情報ダウンロードサービス」（国土交通省）を加工して作成
+        </p>
       </section>
     </main>
 
@@ -165,8 +165,7 @@
           mainCard: document.getElementById("main-card"),
           scoreCircle: document.getElementById("score-circle"),
           location: document.getElementById("location"),
-          localDate: document.getElementById("local-date"),
-          localTime: document.getElementById("local-time"),
+          observedRelative: document.getElementById("observed-relative"),
           scoreNum: document.getElementById("score-num"),
           scoreLabel: document.getElementById("score-label"),
           reasonsWrap: document.getElementById("reasons-wrap"),
@@ -177,7 +176,6 @@
           humid: document.getElementById("humid"),
           sunrise: document.getElementById("sunrise"),
           sunset: document.getElementById("sunset"),
-          fetchedAt: document.getElementById("fetched-at"),
         };
 
         const themes = {
@@ -210,6 +208,40 @@
         function splitIsoDateTime(iso) {
           const [dateStr, timeWithSec = ""] = String(iso).split("T");
           return { dateStr, timeStr: timeWithSec.slice(0, 5) };
+        }
+
+        function toObservedIso(dateTime) {
+          const s = String(dateTime || "").trim();
+          if (!s) return "";
+          if (/[+-]\d{2}:\d{2}$/.test(s) || s.endsWith("Z")) return s;
+          if (/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/.test(s)) return `${s}:00+09:00`;
+          if (/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}$/.test(s)) return `${s}+09:00`;
+          return "";
+        }
+
+        function formatRelativeTimeJa(isoString) {
+          if (!isoString) return "";
+          const d = new Date(isoString);
+          if (Number.isNaN(d.getTime())) return "";
+
+          const diffMs = Date.now() - d.getTime();
+          const absMs = Math.abs(diffMs);
+          const rtf = new Intl.RelativeTimeFormat("ja", { numeric: "auto" });
+
+          if (absMs < 60 * 1000) return "たった今";
+
+          const units = [
+            { unit: "day", ms: 24 * 60 * 60 * 1000 },
+            { unit: "hour", ms: 60 * 60 * 1000 },
+            { unit: "minute", ms: 60 * 1000 },
+          ];
+          for (const { unit, ms } of units) {
+            if (absMs >= ms) {
+              const value = -Math.round(diffMs / ms);
+              return rtf.format(value, unit).replace(/\s/g, "");
+            }
+          }
+          return "";
         }
 
         function weatherCodeToJa(code) {
@@ -318,13 +350,16 @@
           return data;
         }
 
-        async function searchLocationInJapan(query) {
-          const normalized = /^\d{3}-?\d{4}$/.test(query)
-            ? `${query} 日本`
-            : query;
+        function normalizePostalCode(query) {
+          const trimmed = String(query || "").trim();
+          if (!/^\d{3}-?\d{4}$/.test(trimmed)) return null;
+          return trimmed.replace("-", "");
+        }
+
+        async function geocodeInJapanByName(name) {
           const url =
             "https://geocoding-api.open-meteo.com/v1/search" +
-            `?name=${encodeURIComponent(normalized)}` +
+            `?name=${encodeURIComponent(name)}` +
             "&count=10" +
             "&language=ja";
 
@@ -336,14 +371,85 @@
           const results = Array.isArray(data?.results) ? data.results : [];
           const jp = results.find((r) => String(r.country_code).toUpperCase() === "JP") || null;
 
-          if (!jp) {
+          return jp
+            ? {
+                latitude: jp.latitude,
+                longitude: jp.longitude,
+                name: formatPlaceName(jp),
+              }
+            : null;
+        }
+
+        async function searchByPostalCodeInJapan(postalCode) {
+          try {
+            const directRes = await fetch(
+              `https://geoapi.heartrails.com/api/json?method=searchByPostal&postal=${encodeURIComponent(postalCode)}`
+            );
+            if (directRes.ok) {
+              const directData = await directRes.json();
+              const locations = Array.isArray(directData?.response?.location)
+                ? directData.response.location
+                : [];
+              if (locations.length > 0) {
+                const loc = locations[0];
+                const latitude = Number(loc.y);
+                const longitude = Number(loc.x);
+                if (Number.isFinite(latitude) && Number.isFinite(longitude)) {
+                  return {
+                    latitude,
+                    longitude,
+                    name: `${loc.prefecture || ""}${loc.city || ""}${loc.town || ""}`.trim(),
+                  };
+                }
+              }
+            }
+          } catch {
+            // HeartRails が使えない場合のみ、下の ZipCloud へフォールバック
+          }
+
+          const zipRes = await fetch(
+            `https://zipcloud.ibsnet.co.jp/api/search?zipcode=${encodeURIComponent(postalCode)}`
+          );
+          if (!zipRes.ok) {
+            throw new Error(`郵便番号検索に失敗しました: HTTP ${zipRes.status}`);
+          }
+
+          const zipData = await zipRes.json();
+          const results = Array.isArray(zipData?.results) ? zipData.results : [];
+          if (!results.length) {
+            throw new Error("その郵便番号に対応する住所が見つかりませんでした");
+          }
+
+          const addr = results[0];
+          const address1 = String(addr.address1 || "").trim();
+          const address2 = String(addr.address2 || "").trim();
+          const address3 = String(addr.address3 || "").trim();
+          const found = await geocodeInJapanByName(address2 || `${address1}${address2}${address3}`);
+          if (!found) {
+            throw new Error("郵便番号から地点を特定できませんでした（地名でもお試しください）");
+          }
+
+          return {
+            ...found,
+            name: `${address1}${address2}${address3}` || found.name,
+          };
+        }
+
+        async function searchLocationInJapan(query) {
+          const postalCode = normalizePostalCode(query);
+          if (postalCode) {
+            return searchByPostalCodeInJapan(postalCode);
+          }
+
+          const found = await geocodeInJapanByName(query);
+          if (!found) {
             throw new Error("日本国内の地点が見つかりませんでした");
           }
 
           return {
-            latitude: jp.latitude,
-            longitude: jp.longitude,
-            name: formatPlaceName(jp),
+            latitude: found.latitude,
+            longitude: found.longitude,
+            name: found.name,
           };
         }
 
@@ -456,10 +562,8 @@
 
           return {
             location: locationName || "不明な地点",
-            localDate: local.dateStr,
-            localTime: local.timeStr,
+            observedAt: toObservedIso(current.time),
             astro: { sunrise, sunset },
-            fetchedAt: new Date().toISOString(),
             walkabilityPercent: score,
             walkability,
             reasons,
@@ -485,8 +589,7 @@
             `${el.scoreCircle.dataset.baseClasses} ${theme.circleBg}`;
 
           el.location.textContent = j.location ?? "";
-          el.localDate.textContent = j.localDate ?? "";
-          el.localTime.textContent = j.localTime ?? "";
+          el.observedRelative.textContent = formatRelativeTimeJa(j.observedAt) || "—";
           el.scoreNum.textContent = j.walkabilityPercent ?? 0;
           el.scoreLabel.textContent = theme.label;
 
@@ -524,15 +627,6 @@
           el.sunrise.textContent = j.astro?.sunrise ?? "—";
           el.sunset.textContent = j.astro?.sunset ?? "—";
 
-          if (j.fetchedAt) {
-            const d = new Date(j.fetchedAt);
-            el.fetchedAt.textContent = d.toLocaleString("ja-JP", {
-              timeZone: TIMEZONE,
-            });
-          } else {
-            el.fetchedAt.textContent = "";
-          }
-
           el.card.classList.remove("hidden");
         }
 
@@ -562,7 +656,7 @@
               longitude: Number(location.longitude),
             };
             localStorage.setItem(STORAGE_KEY, JSON.stringify(toSave));
-            setStatus(`表示地点: ${displayName}`);
+            setStatus("");
             setLocationPanelOpen(false);
           } catch (err) {
             showError(err instanceof Error ? err.message : String(err));
@@ -597,17 +691,17 @@
         async function getCurrentLocationWithFallback() {
           try {
             return await requestCurrentPosition({
-              enableHighAccuracy: true,
-              timeout: 10000,
-              maximumAge: 0,
+              enableHighAccuracy: false,
+              timeout: 12000,
+              maximumAge: 600000,
             });
           } catch (error) {
-            // 高精度で失敗したときは、通常精度で再試行する
+            // 通常精度で失敗したときは、高精度でも再試行する
             if (error && error.code === 2) {
               return requestCurrentPosition({
-                enableHighAccuracy: false,
-                timeout: 15000,
-                maximumAge: 600000,
+                enableHighAccuracy: true,
+                timeout: 10000,
+                maximumAge: 0,
               });
             }
             throw error;
