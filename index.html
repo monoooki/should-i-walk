@@ -120,7 +120,9 @@
             <input
               id="location-input"
               type="text"
-              placeholder="地名または郵便番号（例: 吉祥寺 / 180-0004）"
+              placeholder="郵便番号（例: 180-0004）"
+              inputmode="numeric"
+              autocomplete="postal-code"
               class="flex-1 rounded-xl border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-sky-400"
             />
             <button
@@ -131,6 +133,9 @@
               反映
             </button>
           </form>
+          <p class="mt-2 text-[11px] text-slate-500">
+            ※ 地名入力も可能ですが、郵便番号入力を推奨
+          </p>
         </div>
 
         <p id="status-msg" class="mt-2 text-xs text-slate-600"></p>
