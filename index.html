@@ -3,129 +3,500 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width,initial-scale=1" />
-    <title>散歩指数 — 三鷹</title>
+    <title>散歩指数</title>
     <script src="https://cdn.tailwindcss.com"></script>
   </head>
-  <body class="min-h-screen bg-gradient-to-br from-sky-100 to-blue-200 flex items-center justify-center p-4">
-
-    <!-- Loading state -->
-    <div id="loading" class="text-center text-sky-700 text-lg font-medium animate-pulse">
-      読み込み中…
-    </div>
-
-    <!-- Error state -->
-    <div id="error" class="hidden bg-red-50 border border-red-200 text-red-700 rounded-2xl p-6 max-w-sm w-full text-center shadow">
-      <p class="text-4xl mb-3">⚠️</p>
-      <p class="font-semibold text-lg mb-1">データを読み込めませんでした</p>
-      <p id="error-msg" class="text-sm"></p>
-    </div>
-
-    <!-- Main card -->
-    <div id="card" class="hidden w-full max-w-sm">
-      <div id="main-card" class="rounded-3xl shadow-xl p-6 text-white">
-
-        <!-- Header -->
-        <div class="flex items-center justify-between mb-1">
-          <div>
-            <p id="location" class="text-xs font-semibold uppercase tracking-widest opacity-80"></p>
-            <h1 class="text-2xl font-bold leading-tight">散歩指数</h1>
-          </div>
-          <div class="text-right text-xs opacity-75">
-            <p id="local-date"></p>
-            <p id="local-time" class="text-lg font-semibold"></p>
-          </div>
-        </div>
-
-        <!-- Score circle -->
-        <div class="flex flex-col items-center my-6">
-          <div id="score-circle" class="w-32 h-32 rounded-full flex flex-col items-center justify-center shadow-inner border-4 border-white/40">
-            <span id="score-num" class="text-5xl font-extrabold leading-none"></span>
-            <span class="text-xs font-medium opacity-80 mt-0.5">/ 100</span>
-          </div>
-          <p id="score-label" class="mt-3 text-xl font-bold tracking-wide"></p>
-        </div>
-
-        <!-- Reasons -->
-        <div id="reasons-wrap" class="mb-5 hidden">
-          <p class="text-xs font-semibold uppercase tracking-widest opacity-70 mb-2">理由</p>
-          <ul id="reasons-list" class="space-y-1"></ul>
-        </div>
-
-        <!-- Weather grid -->
-        <div class="grid grid-cols-2 gap-3 text-white/90">
-          <div class="bg-white/20 rounded-2xl p-3">
-            <p class="text-xs opacity-70 mb-0.5">気温 / 体感</p>
-            <p id="temp" class="text-lg font-bold"></p>
-          </div>
-          <div class="bg-white/20 rounded-2xl p-3">
-            <p class="text-xs opacity-70 mb-0.5">天気</p>
-            <p id="condition" class="text-base font-semibold leading-snug"></p>
-          </div>
-          <div class="bg-white/20 rounded-2xl p-3">
-            <p class="text-xs opacity-70 mb-0.5">風速</p>
-            <p id="wind" class="text-lg font-bold"></p>
-          </div>
-          <div class="bg-white/20 rounded-2xl p-3">
-            <p class="text-xs opacity-70 mb-0.5">湿度 / 降水</p>
-            <p id="humid" class="text-lg font-bold"></p>
-          </div>
-        </div>
-
-        <!-- Sunrise/Sunset -->
-        <div class="flex justify-around mt-4 pt-4 border-t border-white/30 text-white/80 text-sm">
-          <div class="text-center">
-            <span class="text-base">🌅</span>
-            <p id="sunrise" class="font-semibold mt-0.5"></p>
-            <p class="text-xs opacity-60">日の出</p>
-          </div>
-          <div class="text-center">
-            <span class="text-base">🌇</span>
-            <p id="sunset" class="font-semibold mt-0.5"></p>
-            <p class="text-xs opacity-60">日の入り</p>
-          </div>
-        </div>
+  <body class="min-h-screen bg-gradient-to-br from-sky-100 to-blue-200 p-4">
+    <main class="w-full max-w-md mx-auto space-y-3">
+      <div
+        id="loading"
+        class="hidden text-center text-sky-700 text-base font-medium animate-pulse"
+      >
+        読み込み中…
       </div>
 
-      <!-- Footer -->
-      <p class="text-center text-xs text-sky-600/70 mt-3">
-        更新: <span id="fetched-at"></span>
-      </p>
-    </div>
+      <div
+        id="error"
+        class="hidden bg-red-50 border border-red-200 text-red-700 rounded-2xl p-4 w-full text-center shadow"
+      >
+        <p class="text-3xl mb-2">⚠️</p>
+        <p class="font-semibold text-base mb-1">データを読み込めませんでした</p>
+        <p id="error-msg" class="text-sm"></p>
+      </div>
+
+      <div id="card" class="hidden w-full">
+        <div
+          id="main-card"
+          data-base-classes="rounded-3xl shadow-xl p-6 text-white"
+          class="rounded-3xl shadow-xl p-6 text-white"
+        >
+          <div class="flex items-center justify-between mb-1">
+            <div>
+              <p
+                id="location"
+                class="text-xs font-semibold uppercase tracking-widest opacity-80"
+              ></p>
+              <h1 class="text-2xl font-bold leading-tight">散歩指数</h1>
+            </div>
+            <div class="text-right text-xs opacity-75">
+              <p id="local-date"></p>
+              <p id="local-time" class="text-lg font-semibold"></p>
+            </div>
+          </div>
+
+          <div class="flex flex-col items-center my-6">
+            <div
+              id="score-circle"
+              data-base-classes="w-32 h-32 rounded-full flex flex-col items-center justify-center shadow-inner border-4 border-white/40"
+              class="w-32 h-32 rounded-full flex flex-col items-center justify-center shadow-inner border-4 border-white/40"
+            >
+              <span id="score-num" class="text-5xl font-extrabold leading-none"></span>
+              <span class="text-xs font-medium opacity-80 mt-0.5">/ 100</span>
+            </div>
+            <p id="score-label" class="mt-3 text-xl font-bold tracking-wide"></p>
+          </div>
+
+          <div id="reasons-wrap" class="mb-5 hidden">
+            <p class="text-xs font-semibold uppercase tracking-widest opacity-70 mb-2">理由</p>
+            <ul id="reasons-list" class="space-y-1"></ul>
+          </div>
+
+          <div class="grid grid-cols-2 gap-3 text-white/90">
+            <div class="bg-white/20 rounded-2xl p-3">
+              <p class="text-xs opacity-70 mb-0.5">気温 / 体感</p>
+              <p id="temp" class="text-lg font-bold"></p>
+            </div>
+            <div class="bg-white/20 rounded-2xl p-3">
+              <p class="text-xs opacity-70 mb-0.5">天気</p>
+              <p id="condition" class="text-base font-semibold leading-snug"></p>
+            </div>
+            <div class="bg-white/20 rounded-2xl p-3">
+              <p class="text-xs opacity-70 mb-0.5">風速</p>
+              <p id="wind" class="text-lg font-bold"></p>
+            </div>
+            <div class="bg-white/20 rounded-2xl p-3">
+              <p class="text-xs opacity-70 mb-0.5">湿度 / 降水</p>
+              <p id="humid" class="text-lg font-bold"></p>
+            </div>
+          </div>
+
+          <div class="flex justify-around mt-4 pt-4 border-t border-white/30 text-white/80 text-sm">
+            <div class="text-center">
+              <span class="text-base">🌅</span>
+              <p id="sunrise" class="font-semibold mt-0.5"></p>
+              <p class="text-xs opacity-60">日の出</p>
+            </div>
+            <div class="text-center">
+              <span class="text-base">🌇</span>
+              <p id="sunset" class="font-semibold mt-0.5"></p>
+              <p class="text-xs opacity-60">日の入り</p>
+            </div>
+          </div>
+        </div>
+
+        <p class="text-center text-xs text-sky-600/70 mt-3">
+          更新: <span id="fetched-at"></span>
+        </p>
+      </div>
+
+      <section class="text-center">
+        <button
+          id="location-toggle"
+          type="button"
+          aria-expanded="false"
+          class="text-sm text-slate-700 underline underline-offset-4 hover:text-slate-900"
+        >
+          場所を変更
+        </button>
+
+        <div id="location-panel" class="hidden mt-2 bg-white/85 backdrop-blur rounded-2xl p-4 shadow text-left">
+          <div class="flex gap-2 mb-2">
+            <button
+              id="use-geolocation"
+              type="button"
+              class="flex-1 rounded-xl bg-sky-600 hover:bg-sky-700 text-white text-sm font-semibold px-3 py-2"
+            >
+              現在地を使う
+            </button>
+          </div>
+          <form id="search-form" class="flex gap-2">
+            <input
+              id="location-input"
+              type="text"
+              placeholder="地名または郵便番号（例: 吉祥寺 / 180-0004）"
+              class="flex-1 rounded-xl border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-sky-400"
+            />
+            <button
+              id="search-btn"
+              type="submit"
+              class="rounded-xl bg-slate-800 hover:bg-slate-900 text-white text-sm font-semibold px-4 py-2"
+            >
+              反映
+            </button>
+          </form>
+        </div>
+
+        <p id="status-msg" class="mt-2 text-xs text-slate-600"></p>
+      </section>
+    </main>
 
     <script>
-      (async () => {
-        try {
-          const r = await fetch("./data/walkability.json", { cache: "no-store" });
-          if (!r.ok) throw new Error(`HTTP ${r.status}`);
-          const j = await r.json();
+      (() => {
+        const STORAGE_KEY = "should-i-walk:last-location";
+        const DEFAULT_LOCATION = {
+          name: "Mitaka-Shi, Tokyo, Japan",
+          latitude: 35.6839,
+          longitude: 139.5599,
+        };
+        const TIMEZONE = "Asia/Tokyo";
 
-          // Determine color theme based on walkability
-          const themes = {
-            good:    { bg: "from-emerald-400 to-teal-500",    circleBg: "bg-emerald-300/40", label: "🚶 散歩日和！" },
-            neutral: { bg: "from-amber-400 to-orange-400",    circleBg: "bg-amber-300/40",   label: "🤔 まあまあ" },
-            bad:     { bg: "from-slate-500 to-slate-700",     circleBg: "bg-slate-400/40",   label: "🌧 やめとこう" },
+        const el = {
+          loading: document.getElementById("loading"),
+          error: document.getElementById("error"),
+          errorMsg: document.getElementById("error-msg"),
+          card: document.getElementById("card"),
+          locationToggle: document.getElementById("location-toggle"),
+          locationPanel: document.getElementById("location-panel"),
+          statusMsg: document.getElementById("status-msg"),
+          locationInput: document.getElementById("location-input"),
+          useGeolocationBtn: document.getElementById("use-geolocation"),
+          searchBtn: document.getElementById("search-btn"),
+          searchForm: document.getElementById("search-form"),
+          mainCard: document.getElementById("main-card"),
+          scoreCircle: document.getElementById("score-circle"),
+          location: document.getElementById("location"),
+          localDate: document.getElementById("local-date"),
+          localTime: document.getElementById("local-time"),
+          scoreNum: document.getElementById("score-num"),
+          scoreLabel: document.getElementById("score-label"),
+          reasonsWrap: document.getElementById("reasons-wrap"),
+          reasonsList: document.getElementById("reasons-list"),
+          temp: document.getElementById("temp"),
+          condition: document.getElementById("condition"),
+          wind: document.getElementById("wind"),
+          humid: document.getElementById("humid"),
+          sunrise: document.getElementById("sunrise"),
+          sunset: document.getElementById("sunset"),
+          fetchedAt: document.getElementById("fetched-at"),
+        };
+
+        const themes = {
+          good: {
+            bg: "from-emerald-400 to-teal-500",
+            circleBg: "bg-emerald-300/40",
+            label: "🚶 散歩日和！",
+          },
+          caution: {
+            bg: "from-amber-400 to-orange-400",
+            circleBg: "bg-amber-300/40",
+            label: "🤔 まあまあ",
+          },
+          bad: {
+            bg: "from-slate-500 to-slate-700",
+            circleBg: "bg-slate-400/40",
+            label: "🌧 やめとこう",
+          },
+        };
+
+        function clamp(n, min, max) {
+          return Math.max(min, Math.min(max, n));
+        }
+
+        function toMinutesHHMM(hhmm) {
+          const [hh, mm] = String(hhmm).split(":").map((v) => Number(v));
+          return hh * 60 + mm;
+        }
+
+        function splitIsoDateTime(iso) {
+          const [dateStr, timeWithSec = ""] = String(iso).split("T");
+          return { dateStr, timeStr: timeWithSec.slice(0, 5) };
+        }
+
+        function weatherCodeToJa(code) {
+          const map = {
+            0: "快晴",
+            1: "晴れ",
+            2: "晴れ時々くもり",
+            3: "くもり",
+            45: "霧",
+            48: "着氷性の霧",
+            51: "弱い霧雨",
+            53: "霧雨",
+            55: "強い霧雨",
+            56: "弱い着氷性の霧雨",
+            57: "強い着氷性の霧雨",
+            61: "弱い雨",
+            63: "雨",
+            65: "強い雨",
+            66: "弱い着氷性の雨",
+            67: "強い着氷性の雨",
+            71: "弱い雪",
+            73: "雪",
+            75: "強い雪",
+            77: "雪粒",
+            80: "弱いにわか雨",
+            81: "にわか雨",
+            82: "強いにわか雨",
+            85: "弱いにわか雪",
+            86: "強いにわか雪",
+            95: "雷雨",
+            96: "雷雨（弱いひょう）",
+            99: "雷雨（強いひょう）",
           };
-          const theme = themes[j.walkability] || themes.neutral;
+          return map[Number(code)] ?? `天気コード ${code}`;
+        }
 
-          const mainCard = document.getElementById("main-card");
-          mainCard.className = mainCard.className + ` bg-gradient-to-br ${theme.bg}`;
+        function formatPlaceName(result) {
+          if (!result) return "";
+          const rawParts = [result.name, result.admin2, result.admin1, result.country];
+          const seen = new Set();
+          const parts = rawParts.filter((v) => {
+            const key = String(v ?? "").trim();
+            if (!key || seen.has(key)) return false;
+            seen.add(key);
+            return true;
+          });
+          return parts.join(", ");
+        }
 
-          const circle = document.getElementById("score-circle");
-          circle.className = circle.className + ` ${theme.circleBg}`;
+        function showError(message) {
+          el.errorMsg.textContent = message;
+          el.error.classList.remove("hidden");
+        }
 
-          document.getElementById("location").textContent = j.location ?? j.query;
-          document.getElementById("local-date").textContent = j.localDate ?? "";
-          document.getElementById("local-time").textContent = j.localTime ?? "";
-          document.getElementById("score-num").textContent = j.walkabilityPercent ?? 0;
-          document.getElementById("score-label").textContent = theme.label;
+        function clearError() {
+          el.error.classList.add("hidden");
+          el.errorMsg.textContent = "";
+        }
 
-          // Reasons
+        function setLoading(isLoading, message = "") {
+          el.loading.classList.toggle("hidden", !isLoading);
+          if (message) el.loading.textContent = message;
+          el.useGeolocationBtn.disabled = isLoading;
+          el.searchBtn.disabled = isLoading;
+          el.useGeolocationBtn.classList.toggle("opacity-60", isLoading);
+          el.searchBtn.classList.toggle("opacity-60", isLoading);
+        }
+
+        function setStatus(text) {
+          el.statusMsg.textContent = text;
+        }
+
+        function setLocationPanelOpen(isOpen) {
+          el.locationPanel.classList.toggle("hidden", !isOpen);
+          el.locationToggle.setAttribute("aria-expanded", String(isOpen));
+          el.locationToggle.textContent = isOpen ? "場所変更を閉じる" : "場所を変更";
+        }
+
+        async function fetchWeatherByCoords(latitude, longitude) {
+          const url =
+            "https://api.open-meteo.com/v1/forecast" +
+            `?latitude=${encodeURIComponent(latitude)}` +
+            `&longitude=${encodeURIComponent(longitude)}` +
+            `&timezone=${encodeURIComponent(TIMEZONE)}` +
+            `&current=${encodeURIComponent("temperature_2m,apparent_temperature,relative_humidity_2m,precipitation,weather_code,wind_speed_10m")}` +
+            `&daily=${encodeURIComponent("sunrise,sunset")}` +
+            "&forecast_days=1" +
+            "&wind_speed_unit=ms";
+
+          const res = await fetch(url);
+          if (!res.ok) {
+            throw new Error(`天気取得に失敗しました: HTTP ${res.status}`);
+          }
+          const data = await res.json();
+
+          if (
+            !data?.current ||
+            !Array.isArray(data?.daily?.sunrise) ||
+            !Array.isArray(data?.daily?.sunset) ||
+            !data.daily.sunrise.length ||
+            !data.daily.sunset.length
+          ) {
+            throw new Error("天気データの形式が不正です");
+          }
+
+          return data;
+        }
+
+        async function searchLocationInJapan(query) {
+          const normalized = /^\d{3}-?\d{4}$/.test(query)
+            ? `${query} 日本`
+            : query;
+          const url =
+            "https://geocoding-api.open-meteo.com/v1/search" +
+            `?name=${encodeURIComponent(normalized)}` +
+            "&count=10" +
+            "&language=ja";
+
+          const res = await fetch(url);
+          if (!res.ok) {
+            throw new Error(`地点検索に失敗しました: HTTP ${res.status}`);
+          }
+          const data = await res.json();
+          const results = Array.isArray(data?.results) ? data.results : [];
+          const jp = results.find((r) => String(r.country_code).toUpperCase() === "JP") || null;
+
+          if (!jp) {
+            throw new Error("日本国内の地点が見つかりませんでした");
+          }
+
+          return {
+            latitude: jp.latitude,
+            longitude: jp.longitude,
+            name: formatPlaceName(jp),
+          };
+        }
+
+        async function reverseGeocodeInJapan(latitude, longitude) {
+          const url =
+            "https://geocoding-api.open-meteo.com/v1/reverse" +
+            `?latitude=${encodeURIComponent(latitude)}` +
+            `&longitude=${encodeURIComponent(longitude)}` +
+            "&count=1" +
+            "&language=ja";
+
+          const res = await fetch(url);
+          if (!res.ok) return "";
+
+          const data = await res.json();
+          const first = Array.isArray(data?.results) ? data.results[0] : null;
+          if (!first) return "";
+
+          const isJapan = String(first.country_code).toUpperCase() === "JP";
+          return isJapan ? formatPlaceName(first) : "";
+        }
+
+        function buildWalkabilityData(weatherData, locationName) {
+          const current = weatherData.current;
+          const sunrise = splitIsoDateTime(weatherData.daily.sunrise[0]).timeStr;
+          const sunset = splitIsoDateTime(weatherData.daily.sunset[0]).timeStr;
+          const local = splitIsoDateTime(current.time);
+
+          const feels = Number(current.apparent_temperature);
+          const wind = Math.round(Number(current.wind_speed_10m) * 10) / 10;
+          const precip = Number(current.precipitation);
+          const humidity = Number(current.relative_humidity_2m);
+
+          const nowMin = toMinutesHHMM(local.timeStr);
+          const sunriseMin = toMinutesHHMM(sunrise);
+          const sunsetMin = toMinutesHHMM(sunset);
+
+          const isDaytime = nowMin >= sunriseMin && nowMin < sunsetMin;
+          const isRaining = precip > 0;
+
+          const reasons = [];
+          let score = 100;
+
+          if (isRaining) {
+            score = 0;
+            reasons.push(`雨/降水あり（${precip}mm）`);
+          } else {
+            reasons.push("雨なし");
+          }
+
+          if (!isDaytime) {
+            score = 0;
+            reasons.push(`夜間（${sunrise}〜${sunset}の範囲外）`);
+          } else {
+            reasons.push(`日中（${sunrise}〜${sunset}）`);
+          }
+
+          if (score > 0) {
+            const bestLow = 18;
+            const bestHigh = 24;
+            const okLow = 8;
+            const okHigh = 30;
+
+            let tempPenalty = 0;
+            if (feels < okLow || feels > okHigh) {
+              tempPenalty = 50;
+            } else if (feels < bestLow) {
+              tempPenalty = ((bestLow - feels) / (bestLow - okLow)) * 25;
+            } else if (feels > bestHigh) {
+              tempPenalty = ((feels - bestHigh) / (okHigh - bestHigh)) * 25;
+            }
+            tempPenalty = clamp(tempPenalty, 0, 50);
+            if (tempPenalty > 0) {
+              reasons.push(`体感温度による減点（-${tempPenalty.toFixed(0)}）`);
+            }
+
+            let windPenalty = 0;
+            if (wind >= 8) {
+              windPenalty = 25;
+            } else if (wind > 4) {
+              windPenalty = ((wind - 4) / (8 - 4)) * 25;
+            }
+            windPenalty = clamp(windPenalty, 0, 25);
+            if (windPenalty > 0) {
+              reasons.push(`風による減点（-${windPenalty.toFixed(0)}）`);
+            }
+
+            let humidityPenalty = 0;
+            if (humidity >= 80) {
+              humidityPenalty = 10;
+            } else if (humidity > 60) {
+              humidityPenalty = ((humidity - 60) / (80 - 60)) * 10;
+            }
+            humidityPenalty = clamp(humidityPenalty, 0, 10);
+            if (humidityPenalty > 0) {
+              reasons.push(`湿度による減点（-${humidityPenalty.toFixed(0)}）`);
+            }
+
+            score = Math.round(
+              clamp(100 - tempPenalty - windPenalty - humidityPenalty, 0, 100)
+            );
+          }
+
+          let walkability = "caution";
+          if (score === 0) {
+            walkability = "bad";
+          } else if (score >= 70) {
+            walkability = "good";
+          }
+
+          return {
+            location: locationName || "不明な地点",
+            localDate: local.dateStr,
+            localTime: local.timeStr,
+            astro: { sunrise, sunset },
+            fetchedAt: new Date().toISOString(),
+            walkabilityPercent: score,
+            walkability,
+            reasons,
+            raw: {
+              tempC: current.temperature_2m,
+              feelslikeC: current.apparent_temperature,
+              condition: weatherCodeToJa(current.weather_code),
+              windMs: wind,
+              precipMm: precip,
+              humidity,
+            },
+          };
+        }
+
+        function renderWalkability(j) {
+          clearError();
+
+          const theme = themes[j.walkability] || themes.caution;
+
+          el.mainCard.className =
+            `${el.mainCard.dataset.baseClasses} bg-gradient-to-br ${theme.bg}`;
+          el.scoreCircle.className =
+            `${el.scoreCircle.dataset.baseClasses} ${theme.circleBg}`;
+
+          el.location.textContent = j.location ?? "";
+          el.localDate.textContent = j.localDate ?? "";
+          el.localTime.textContent = j.localTime ?? "";
+          el.scoreNum.textContent = j.walkabilityPercent ?? 0;
+          el.scoreLabel.textContent = theme.label;
+
+          el.reasonsList.innerHTML = "";
           const reasons = j.reasons ?? [];
           if (reasons.length > 0) {
-            const ul = document.getElementById("reasons-list");
-            reasons.forEach(reason => {
+            reasons.forEach((reason) => {
               const li = document.createElement("li");
-              li.className = "flex items-start gap-1.5 text-sm bg-white/20 rounded-xl px-3 py-1.5";
+              li.className =
+                "flex items-start gap-1.5 text-sm bg-white/20 rounded-xl px-3 py-1.5";
               const bullet = document.createElement("span");
               bullet.className = "mt-0.5";
               bullet.textContent = "•";
@@ -133,42 +504,265 @@
               text.textContent = reason;
               li.appendChild(bullet);
               li.appendChild(text);
-              ul.appendChild(li);
+              el.reasonsList.appendChild(li);
             });
-            document.getElementById("reasons-wrap").classList.remove("hidden");
+            el.reasonsWrap.classList.remove("hidden");
+          } else {
+            el.reasonsWrap.classList.add("hidden");
           }
 
-          // Weather
           const raw = j.raw ?? {};
-          document.getElementById("temp").textContent =
+          el.temp.textContent =
             raw.tempC != null ? `${raw.tempC}°C / ${raw.feelslikeC}°C` : "—";
-          document.getElementById("condition").textContent = raw.condition ?? "—";
-          document.getElementById("wind").textContent =
-            raw.windMs != null ? `${raw.windMs} m/s` : "—";
-          document.getElementById("humid").textContent =
+          el.condition.textContent = raw.condition ?? "—";
+          el.wind.textContent = raw.windMs != null ? `${raw.windMs} m/s` : "—";
+          el.humid.textContent =
             (raw.humidity != null ? `${raw.humidity}%` : "—") +
             " / " +
             (raw.precipMm != null ? `${raw.precipMm}mm` : "—");
 
-          // Astro
-          document.getElementById("sunrise").textContent = j.astro?.sunrise ?? "—";
-          document.getElementById("sunset").textContent = j.astro?.sunset ?? "—";
+          el.sunrise.textContent = j.astro?.sunrise ?? "—";
+          el.sunset.textContent = j.astro?.sunset ?? "—";
 
-          // Fetched at
           if (j.fetchedAt) {
             const d = new Date(j.fetchedAt);
-            document.getElementById("fetched-at").textContent =
-              d.toLocaleString("ja-JP", { timeZone: "Asia/Tokyo" });
+            el.fetchedAt.textContent = d.toLocaleString("ja-JP", {
+              timeZone: TIMEZONE,
+            });
+          } else {
+            el.fetchedAt.textContent = "";
           }
 
-          document.getElementById("loading").classList.add("hidden");
-          document.getElementById("card").classList.remove("hidden");
-
-        } catch (e) {
-          document.getElementById("loading").classList.add("hidden");
-          document.getElementById("error-msg").textContent = e.message;
-          document.getElementById("error").classList.remove("hidden");
+          el.card.classList.remove("hidden");
         }
+
+        async function loadForLocation(location, statusText) {
+          setLoading(true, "読み込み中…");
+          clearError();
+          if (statusText) {
+            setStatus(statusText);
+          }
+
+          try {
+            const weatherData = await fetchWeatherByCoords(
+              location.latitude,
+              location.longitude
+            );
+            const displayName =
+              location.name ||
+              (await reverseGeocodeInJapan(location.latitude, location.longitude)) ||
+              `緯度 ${location.latitude.toFixed(3)}, 経度 ${location.longitude.toFixed(3)}`;
+
+            const walkability = buildWalkabilityData(weatherData, displayName);
+            renderWalkability(walkability);
+
+            const toSave = {
+              name: displayName,
+              latitude: Number(location.latitude),
+              longitude: Number(location.longitude),
+            };
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(toSave));
+            setStatus(`表示地点: ${displayName}`);
+            setLocationPanelOpen(false);
+          } catch (err) {
+            showError(err instanceof Error ? err.message : String(err));
+          } finally {
+            setLoading(false);
+          }
+        }
+
+        function getSavedLocation() {
+          try {
+            const raw = localStorage.getItem(STORAGE_KEY);
+            if (!raw) return null;
+            const parsed = JSON.parse(raw);
+            if (
+              typeof parsed?.latitude !== "number" ||
+              typeof parsed?.longitude !== "number"
+            ) {
+              return null;
+            }
+            return parsed;
+          } catch {
+            return null;
+          }
+        }
+
+        function requestCurrentPosition(options) {
+          return new Promise((resolve, reject) => {
+            navigator.geolocation.getCurrentPosition(resolve, reject, options);
+          });
+        }
+
+        async function getCurrentLocationWithFallback() {
+          try {
+            return await requestCurrentPosition({
+              enableHighAccuracy: true,
+              timeout: 10000,
+              maximumAge: 0,
+            });
+          } catch (error) {
+            // 高精度で失敗したときは、通常精度で再試行する
+            if (error && error.code === 2) {
+              return requestCurrentPosition({
+                enableHighAccuracy: false,
+                timeout: 15000,
+                maximumAge: 600000,
+              });
+            }
+            throw error;
+          }
+        }
+
+        async function fetchApproxLocationByIp() {
+          const providers = [
+            {
+              url: "https://ipapi.co/json/",
+              parse: (data) => ({
+                ok: typeof data?.latitude === "number" && typeof data?.longitude === "number",
+                latitude: data?.latitude,
+                longitude: data?.longitude,
+                city: data?.city,
+                region: data?.region,
+                country: data?.country_name,
+              }),
+            },
+            {
+              url: "https://ipwho.is/",
+              parse: (data) => ({
+                ok:
+                  data?.success &&
+                  typeof data?.latitude === "number" &&
+                  typeof data?.longitude === "number",
+                latitude: data?.latitude,
+                longitude: data?.longitude,
+                city: data?.city,
+                region: data?.region,
+                country: data?.country,
+              }),
+            },
+          ];
+
+          const errors = [];
+          for (const provider of providers) {
+            try {
+              const res = await fetch(provider.url);
+              if (!res.ok) {
+                errors.push(`${provider.url} HTTP ${res.status}`);
+                continue;
+              }
+
+              const data = await res.json();
+              const parsed = provider.parse(data);
+              if (!parsed.ok) {
+                errors.push(`${provider.url} invalid response`);
+                continue;
+              }
+
+              return {
+                latitude: parsed.latitude,
+                longitude: parsed.longitude,
+                name: [parsed.city, parsed.region, parsed.country]
+                  .map((v) => String(v || "").trim())
+                  .filter(Boolean)
+                  .join(", "),
+              };
+            } catch (error) {
+              errors.push(`${provider.url} ${error?.message || String(error)}`);
+            }
+          }
+
+          throw new Error(`IP位置推定に失敗しました (${errors.join(" / ")})`);
+        }
+
+        function initEvents() {
+          el.locationToggle.addEventListener("click", () => {
+            const isOpen = el.locationToggle.getAttribute("aria-expanded") === "true";
+            setLocationPanelOpen(!isOpen);
+          });
+
+          el.searchForm.addEventListener("submit", async (event) => {
+            event.preventDefault();
+            const query = el.locationInput.value.trim();
+            if (!query) {
+              setStatus("地名または郵便番号を入力してください");
+              return;
+            }
+
+            try {
+              setLoading(true, "地点を検索中…");
+              clearError();
+              const location = await searchLocationInJapan(query);
+              await loadForLocation(location, `検索: ${location.name}`);
+            } catch (err) {
+              showError(err instanceof Error ? err.message : String(err));
+              setLoading(false);
+            }
+          });
+
+          el.useGeolocationBtn.addEventListener("click", async () => {
+            if (!navigator.geolocation) {
+              showError("このブラウザは位置情報取得に対応していません");
+              return;
+            }
+
+            setLoading(true, "現在地を取得中…");
+            clearError();
+            try {
+              const position = await getCurrentLocationWithFallback();
+              const coords = {
+                latitude: position.coords.latitude,
+                longitude: position.coords.longitude,
+              };
+              await loadForLocation(coords, "現在地で再取得しました");
+            } catch (error) {
+              if (error?.code === 2) {
+                try {
+                  setLoading(true, "IPベースで位置を推定中…");
+                  const approx = await fetchApproxLocationByIp();
+                  await loadForLocation(
+                    approx,
+                    "端末位置情報が使えないため、IPベースの推定地点で表示しました"
+                  );
+                  return;
+                } catch (ipError) {
+                  const detail = ipError?.message ? `: ${ipError.message}` : "";
+                  setLoading(false);
+                  setStatus("現在地の取得に失敗したため、前回地点を表示中です");
+                  showError(`現在地を取得できませんでした（端末の位置情報設定をご確認ください）${detail}`);
+                  return;
+                }
+              }
+
+              setLoading(false);
+              const map = {
+                1: "位置情報の利用が許可されていません（ブラウザ設定をご確認ください）",
+                3: "現在地の取得がタイムアウトしました",
+              };
+              const base = map[error?.code] || "現在地取得に失敗しました";
+              const detail = error?.message ? `: ${error.message}` : "";
+              setStatus("現在地の取得に失敗したため、前回地点を表示中です");
+              showError(`${base}${detail}`);
+            }
+          });
+        }
+
+        async function init() {
+          initEvents();
+          setStatus("現在地を使うか、地名/郵便番号で変更できます");
+
+          const saved = getSavedLocation();
+          if (saved) {
+            await loadForLocation(saved, "前回の地点を読み込みました");
+          } else {
+            await loadForLocation(DEFAULT_LOCATION, "初期地点（三鷹市）を表示中");
+          }
+        }
+
+        init().catch((err) => {
+          setLoading(false);
+          showError(err instanceof Error ? err.message : String(err));
+        });
       })();
     </script>
   </body>
