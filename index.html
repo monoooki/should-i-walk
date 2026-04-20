@@ -14,9 +14,14 @@
     <main class="w-full max-w-md mx-auto space-y-3">
       <div
         id="loading"
-        class="hidden text-center text-sky-700 text-base font-medium animate-pulse"
+        class="hidden flex justify-center"
+        aria-live="polite"
       >
-        読み込み中…
+        <span
+          class="inline-block h-8 w-8 animate-spin rounded-full border-4 border-sky-300 border-t-sky-700"
+          role="status"
+          aria-label="読み込み中"
+        ></span>
       </div>
 
       <div
@@ -109,6 +114,13 @@
         >
           場所を変更
         </button>
+        <div id="location-loading" class="hidden mt-1 flex justify-center" aria-live="polite">
+          <span
+            class="inline-block h-6 w-6 animate-spin rounded-full border-[3px] border-slate-300 border-t-slate-700"
+            role="status"
+            aria-label="読み込み中"
+          ></span>
+        </div>
 
         <div id="location-panel" class="hidden mt-2 bg-white/85 backdrop-blur rounded-2xl p-4 shadow text-left">
           <div class="flex gap-2 mb-2">
@@ -165,6 +177,7 @@
           errorMsg: document.getElementById("error-msg"),
           card: document.getElementById("card"),
           locationToggle: document.getElementById("location-toggle"),
+          locationLoading: document.getElementById("location-loading"),
           locationPanel: document.getElementById("location-panel"),
           statusMsg: document.getElementById("status-msg"),
           locationInput: document.getElementById("location-input"),
@@ -310,9 +323,17 @@
           el.errorMsg.textContent = "";
         }
 
-        function setLoading(isLoading, message = "") {
-          el.loading.classList.toggle("hidden", !isLoading);
-          if (message) el.loading.textContent = message;
+        function setLoading(isLoading, options = {}) {
+          const target = options.target === "location" ? "location" : "top";
+          const message = String(options.message || "");
+
+          el.loading.classList.toggle("hidden", !(isLoading && target === "top"));
+          el.locationLoading.classList.toggle("hidden", !(isLoading && target === "location"));
+          el.locationToggle.classList.toggle("hidden", isLoading && target === "location");
+          if (message) {
+            el.loading.setAttribute("aria-label", message);
+            el.locationLoading.setAttribute("aria-label", message);
+          }
           el.useGeolocationBtn.disabled = isLoading;
           el.searchBtn.disabled = isLoading;
           el.useGeolocationBtn.classList.toggle("opacity-60", isLoading);
@@ -639,8 +660,8 @@
           el.card.classList.remove("hidden");
         }
 
-        async function loadForLocation(location, statusText) {
-          setLoading(true, "読み込み中…");
+        async function loadForLocation(location, statusText, loadingTarget = "top") {
+          setLoading(true, { target: loadingTarget, message: "読み込み中…" });
           clearError();
           if (statusText) {
             setStatus(statusText);
@@ -670,7 +691,7 @@
           } catch (err) {
             showError(err instanceof Error ? err.message : String(err));
           } finally {
-            setLoading(false);
+            setLoading(false, { target: loadingTarget });
           }
         }
 
@@ -793,13 +814,13 @@
             }
 
             try {
-              setLoading(true, "地点を検索中…");
+              setLoading(true, { target: "location", message: "地点を検索中…" });
               clearError();
               const location = await searchLocationInJapan(query);
-              await loadForLocation(location, `検索: ${location.name}`);
+              await loadForLocation(location, `検索: ${location.name}`, "location");
             } catch (err) {
               showError(err instanceof Error ? err.message : String(err));
-              setLoading(false);
+              setLoading(false, { target: "location" });
             }
           });
 
@@ -809,7 +830,7 @@
               return;
             }
 
-            setLoading(true, "現在地を取得中…");
+            setLoading(true, { target: "location", message: "現在地を取得中…" });
             clearError();
             try {
               const position = await getCurrentLocationWithFallback();
@@ -817,27 +838,28 @@
                 latitude: position.coords.latitude,
                 longitude: position.coords.longitude,
               };
-              await loadForLocation(coords, "現在地で再取得しました");
+              await loadForLocation(coords, "現在地で再取得しました", "location");
             } catch (error) {
               if (error?.code === 2) {
                 try {
-                  setLoading(true, "IPベースで位置を推定中…");
+                  setLoading(true, { target: "location", message: "IPベースで位置を推定中…" });
                   const approx = await fetchApproxLocationByIp();
                   await loadForLocation(
                     approx,
-                    "端末位置情報が使えないため、IPベースの推定地点で表示しました"
+                    "端末位置情報が使えないため、IPベースの推定地点で表示しました",
+                    "location"
                   );
                   return;
                 } catch (ipError) {
                   const detail = ipError?.message ? `: ${ipError.message}` : "";
-                  setLoading(false);
+                  setLoading(false, { target: "location" });
                   setStatus("現在地の取得に失敗したため、前回地点を表示中です");
                   showError(`現在地を取得できませんでした（端末の位置情報設定をご確認ください）${detail}`);
                   return;
                 }
               }
 
-              setLoading(false);
+              setLoading(false, { target: "location" });
               const map = {
                 1: "位置情報の利用が許可されていません（ブラウザ設定をご確認ください）",
                 3: "現在地の取得がタイムアウトしました",
@@ -856,9 +878,9 @@
 
           const saved = getSavedLocation();
           if (saved) {
-            await loadForLocation(saved, "前回の地点を読み込みました");
+            await loadForLocation(saved, "前回の地点を読み込みました", "top");
           } else {
-            await loadForLocation(DEFAULT_LOCATION, "初期地点（三鷹市）を表示中");
+            await loadForLocation(DEFAULT_LOCATION, "初期地点（三鷹市）を表示中", "top");
           }
         }
 
